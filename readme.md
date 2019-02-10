@@ -2,7 +2,7 @@
 
 ## 脚本文件列表
 
-### hdp-config.sh (系统初始化)
+### [hdp-config.sh](./hdp-config.sh) (系统初始化)
 
 > 注意：脚本运行前确认net-tools、wget、whiptail是否安装。
 > 
@@ -16,7 +16,7 @@
 - 配置ssh密钥
 - 时区调整、NTP服务配置
 
-### hdp-install.sh (软件安装配置)
+### [hdp-install.sh](./hdp-install.sh) (软件安装配置)
 
 > 注意：此步骤完成时需要重启系统。
 
@@ -24,8 +24,8 @@
 - zookeeper-3.4.10
 - hadoop-2.7.6
 - hbase-1.2.4
-  
-### hdp-start.sh (启动服务)
+
+### [hdp-start.sh](./hdp-start.sh) (启动服务)
 
 ```
 $ZOOKEEPER_HOME/bin/zkServer.sh start
