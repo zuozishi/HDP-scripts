@@ -16,8 +16,10 @@ if ([ $(hostname) == "master" ]) then
     $ZOOKEEPER_HOME/bin/zkServer.sh status
     echo-log "Starting hadoop..."
     $HADOOP_HOME/sbin/start-all.sh
+    echo-log "Will start Spark."
     echo-log "Press any key to continue."
-    echo-log "Will start HBase."
+    #echo-log "Will start HBase."
     read
-    $HBASE_HOME/bin/start-hbase.sh
+    $SPARK_HOME/sbin/start-all.sh
+    #$HBASE_HOME/bin/start-hbase.sh
 fi

@@ -5,7 +5,7 @@
 </property>
 <property>
   <name>hadoop.tmp.dir</name>
-  <value>/usr/hadoop/hadoop-2.7.6/hdfs/tmp</value>
+  <value>/usr/hadoop-2.7.3/hdfs/tmp</value>
   <description>A base for other temporary directories.</description>
 </property>
 <property>

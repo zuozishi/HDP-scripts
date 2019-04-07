@@ -5,22 +5,19 @@ function echo-log
     echo -e "\033[32m$1\033[0m"
 }
 
-hostssh="Administrator@192.168.1.2"
 prefix=24
 netseg="192.168.1"
 gateway="$netseg.1"
-ip_master="$netseg.10"
-ip_slave1="$netseg.11"
-ip_slave2="$netseg.12"
-ip_slave3="$netseg.13"
+ip_master="$netseg.201"
+ip_slave1="$netseg.202"
+ip_slave2="$netseg.203"
 dns1="114.114.114.114"
 dns2="114.114.115.115"
 
 hostname1=$(whiptail --title "Setup" --menu "Choose deploy type." 15 60 4 \
 "master" "" \
 "slave1" "" \
-"slave2" "" \
-"slave3" ""  3>&1 1>&2 2>&3)
+"slave2" ""  3>&1 1>&2 2>&3)
 clear
 
 echo-log "Depoly as $hostname1"
@@ -33,9 +30,6 @@ fi
 if ([ $hostname1 == "slave2" ]) then
     ipaddr=$ip_slave2
 fi
-if ([ $hostname1 == "slave3" ]) then
-    ipaddr=$ip_slave3
-fi
 
 function aliyun-yum
 {
@@ -46,7 +40,8 @@ function aliyun-yum
 
 function config-hostname
 {
-    hostnamectl set-hostname $hostname1
+    hostname $hostname1
+    echo $hostname1 > /etc/hostname
     echo "NETWORKING=yes" >> /etc/sysconfig/network
     echo "HOSTNAME=$hostname1" >> /etc/sysconfig/network
 }
@@ -58,7 +53,7 @@ function config-ipaddr
     netfile="/etc/sysconfig/network-scripts/ifcfg-$netinterface"
     uuid=$(uuidgen ens33)
 
-    cp ./ifcfg-ens33.txt $netfile
+    cp ./conf/ifcfg-ens33.txt $netfile
     echo "DEVICE=\"$netinterface\"" >> $netfile
     echo "NAME=\"$netinterface\"" >> $netfile
     echo "UUID=\"$uuid\"" >> $netfile
@@ -72,12 +67,9 @@ function config-ipaddr
 
 function config-hosts
 {
-    echo "127.0.0.1 localhost" > /etc/hosts
-    echo "::1 localhost" >> /etc/hosts
     echo "$ip_master master master.root" >> /etc/hosts
     echo "$ip_slave1 slave1 slave1.root" >> /etc/hosts
     echo "$ip_slave2 slave2 slave2.root" >> /etc/hosts
-    echo "$ip_slave3 slave3 slave3.root" >> /etc/hosts
 }
 
 function config-time
@@ -87,16 +79,28 @@ function config-time
         tzselect
     fi
     clear
-    yum install ntp -y
+    which ntpdate
+    if [[ $? == 0 ]]
+    then
+        echo-log 'NTP installed'
+    else
+        yum install ntp -y
+    fi
+    
     if [[ $(hostname) == "master" ]]
     then
         echo-log "Config master ntp service..."
         echo "disable monitor" > /etc/ntp.conf
-        echo "server $netseg.0" >> /etc/ntp.conf
-        echo "fudge $netseg.0 stratum 10" >> /etc/ntp.conf
+        echo "server 127.127.1.0" >> /etc/ntp.conf
+        echo "fudge 127.127.1.0 stratum 10" >> /etc/ntp.conf
         systemctl restart ntpd.service
     else
+        systemctl stop ntpd.service
+        echo "disable monitor" > /etc/ntp.conf
+        echo "server $ip_master" >> /etc/ntp.conf
+        echo "fudge $ip_master stratum 10" >> /etc/ntp.conf
         echo-log "Sync slave time to master..."
+        read -p "Wait master ntp service start..."
         ntpdate master
     fi
 }
@@ -105,7 +109,21 @@ function config-ssh
 {
     ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
     cp ~/.ssh/id_dsa.pub ~/.ssh/$(hostname)-ssh.pub
-    #scp ~/.ssh/$(hostname)-ssh.pub $hostssh:C:
+    if [[ $(hostname) == "master" ]]
+    then
+        read -p 'Wait for slaves ssh key...'
+        ls ~/.ssh
+        read -p 'Press any key to contiune...'
+        cat ~/.ssh/master-ssh.pub > ~/.ssh/authorized_keys
+        cat ~/.ssh/slave1-ssh.pub >> ~/.ssh/authorized_keys
+        cat ~/.ssh/slave2-ssh.pub >> ~/.ssh/authorized_keys
+        echo-log -p 'Send authorized_keys to slaves...'
+        scp ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
+        scp ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
+    else
+        echo-log 'Send ssh key to master...'
+        scp ~/.ssh/id_dsa.pub master:~/.ssh/$(hostname)-ssh.pub
+    fi
 }
 
 if ([ -e $(cat ~/.bashrc | grep cls) ]) then
@@ -119,7 +137,7 @@ ConfigList=$(whiptail --title "Config List" --checklist \
 "disfirewall" "Disable Firewalld" ON \
 "aliyun-yum" "Aliyun yum source" OFF \
 "hostname" "New Hostname" ON \
-"ipaddr" "Config IP Address" ON \
+"ipaddr" "Config IP Address" OFF \
 "hosts" "Config Hosts File" ON \
 "ssh" "Config SSH Server" ON \
 "time" "Config Time Sync" ON 3>&1 1>&2 2>&3)

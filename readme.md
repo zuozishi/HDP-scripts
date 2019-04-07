@@ -10,7 +10,7 @@
 
 - 禁用防火墙
 - 改用阿里云yum源
-- 修改hostname（仅限：master、slave1、slave2、slave3）
+- 修改hostname（仅限：master、slave1、slave2）
 - 配置静态IP
 - 修改hosts文件
 - 配置ssh密钥
@@ -18,12 +18,14 @@
 
 ### [hdp-install.sh](./hdp-install.sh) (软件安装配置)
 
-> 注意：此步骤完成时需要重启系统。
+> ~~注意：此步骤完成时需要重启系统。~~
 
-- jdk1.8.0_201
+- jdk1.8.0_171
 - zookeeper-3.4.10
-- hadoop-2.7.6
-- hbase-1.2.4
+- hadoop-2.7.3
+- ~~hbase-1.2.4~~
+- scala-2.11.12
+- spark-2.4.0
 
 ### [hdp-start.sh](./hdp-start.sh) (启动服务)
 
@@ -32,7 +34,7 @@ $ZOOKEEPER_HOME/bin/zkServer.sh start
 
 if master
     $HADOOP_HOME/sbin/start-all.sh
-    $HBASE_HOME/bin/start-hbase.sh
+    $SPARK_HOME/sbin/start-all.sh
 end if
 ```
 

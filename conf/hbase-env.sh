@@ -24,8 +24,8 @@ export HBASE_MANAGES_ZK=false
 # into the startup scripts (bin/hbase, etc.)
 
 # The java implementation to use.  Java 1.7+ required.
-export JAVA_HOME=/usr/java/jdk1.8.0_201/
-export HBASE_CLASSPATH=/usr/hadoop/hadoop-2.7.6/etc/Hadoop
+export JAVA_HOME=/usr/jdk1.8.0_171/
+export HBASE_CLASSPATH=/usr/hadoop-2.7.3/etc/hadoop
 # Extra Java CLASSPATH elements.  Optional.
 # export HBASE_CLASSPATH=
 

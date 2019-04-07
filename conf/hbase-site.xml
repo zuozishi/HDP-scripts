@@ -18,12 +18,12 @@
 </property>
 <property>
   <name>hbase.zookeeper.quorum</name>
-  <value>master,slave1</value>
+  <value>master,slave1,slave2</value>
   <description></description>
 </property>
 <property>
   <name>hbase.zookeeper.property.dataDir</name>
-  <value>/usr/zookeeper/zookeeper-3.4.10</value>
+  <value>/usr/zookeeper-3.4.10</value>
   <description></description>
 </property>
 <property>
