@@ -12,7 +12,7 @@ function download-from-github
     yum install git -y
     git clone https://github.com/zuozishi/HDP-scripts.git
     cd ./HDP-scripts
-
+    chmod a+x *.sh
     cp /opt/soft/jdk-8u171-linux-x64.tar.gz ./pkgs/jdk.tar.gz
     cp /opt/soft/zookeeper-3.4.10.tar.gz ./pkgs/zookeeper.tar.gz
     cp /opt/soft/hadoop-2.7.3.tar.gz ./pkgs/hadoop.tar.gz
