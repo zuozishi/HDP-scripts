@@ -19,3 +19,19 @@ function download-from-github
     cp /opt/soft/scala-2.11.12.tgz ./pkgs/scala.tgz
     cp /opt/soft/spark-2.4.0-bin-hadoop2.7.tgz ./pkgs/spark.tgz
 }
+
+OPTION=$(whiptail --title "Menu" --menu "Choose scripts file source." 15 60 4 \
+"1" "download-from-iis" \
+"2" "download-from-github" 3>&1 1>&2 2>&3)
+
+clear
+
+if [[ $ConfigList == "1" ]]
+then
+    download-from-iis
+fi
+
+if [[ $ConfigList == "2" ]]
+then
+    download-from-github
+fi
