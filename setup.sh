@@ -28,12 +28,12 @@ clear
 
 cd ~/
 
-if [[ $ConfigList == "download-from-iis" ]]
+if [[ $OPTION == "download-from-iis" ]]
 then
     download-from-iis
 fi
 
-if [[ $ConfigList == "download-from-github" ]]
+if [[ $OPTION == "download-from-github" ]]
 then
     download-from-github
 fi

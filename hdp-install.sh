@@ -24,7 +24,7 @@ function send-soft
     scp -r $softdir/$zk_v slave2:$softdir/$zk_v
 
     scp $softdir/$zk_v/zkdata/id2 slave1:$softdir/$zk_v/zkdata/myid
-    scp $softdir/$zk_v/zkdata/id3 slave1:$softdir/$zk_v/zkdata/myid
+    scp $softdir/$zk_v/zkdata/id3 slave2:$softdir/$zk_v/zkdata/myid
 
     scp -r $softdir/$hdp_v slave1:$softdir/$hdp_v
     scp -r $softdir/$hdp_v slave2:$softdir/$hdp_v
