@@ -2,6 +2,7 @@
 
 serverip="192.168.1.2"
 
+cd ~/
 rm -rf ./HDP-scripts
 mkdir HDP-scripts
 cd HDP-scripts

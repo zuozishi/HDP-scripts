@@ -21,17 +21,19 @@ function download-from-github
 }
 
 OPTION=$(whiptail --title "Menu" --menu "Choose scripts file source." 15 60 4 \
-"1" "download-from-iis" \
-"2" "download-from-github" 3>&1 1>&2 2>&3)
+"download-from-iis" "" \
+"download-from-github" "" 3>&1 1>&2 2>&3)
 
 clear
 
-if [[ $ConfigList == "1" ]]
+cd ~/
+
+if [[ $ConfigList == "download-from-iis" ]]
 then
     download-from-iis
 fi
 
-if [[ $ConfigList == "2" ]]
+if [[ $ConfigList == "download-from-github" ]]
 then
     download-from-github
 fi
