@@ -101,18 +101,11 @@ scp ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
 scp ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
 
 #解压所有软件包
-for tar in /opt/soft/*.tar.gz
+for tar in /opt/soft/*.{gz,tgz}
 do
     echo-log "unzip $tar..."
-    tar xvf $tar -C /usr >> ./log/tar.log
-done &
-
-for tar in /opt/soft/*.tgz
-do
-    echo-log "unzip $tar..."
-    tar xvf $tar -C /usr >> ./log/tar.log
-done &
-
+    (tar xvf $tar -C /usr; echo-log "unzip $tar complete") & >> ./log/tar.log
+done
 wait
 
 #移动软件目录

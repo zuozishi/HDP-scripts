@@ -45,18 +45,11 @@ then
 fi
 
 #解压所有软件包
-for tar in /opt/soft/*.tar.gz
+for tar in /opt/soft/*.{gz,tgz}
 do
     echo-log "unzip $tar..."
-    tar -vxzf $tar -C /usr >> ./log/tar.log
-done &
-
-for tar in /opt/soft/*.tgz
-do
-    echo-log "unzip $tar..."
-    tar -vxzf $tar -C /usr >> ./log/tar.log
-done &
-
+    (tar xvf $tar -C /usr; echo-log "unzip $tar complete") & >> ./log/tar.log
+done
 wait
 
 #移动软件目录
