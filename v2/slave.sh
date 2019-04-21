@@ -36,16 +36,6 @@ if (whiptail --title "Change Time Zone ?" --yesno "$nowdate" 10 60) then
     tzselect
 fi
 clear
-which ntpdate
-if [[ $? == 0 ]]
-then
-    echo-log 'NTP has installed'
-else
-    if (whiptail --title "yum install ntp ?" --yesno "" 10 60) then
-        echo-log 'Install NTP...'
-        yum install ntp -y >> ./log/ntp.log
-    fi
-fi
 
 which ntpdate
 if [[ $? == 0 ]]
@@ -58,14 +48,16 @@ fi
 for tar in /opt/soft/*.tar.gz
 do
     echo-log "unzip $tar..."
-    tar xvf $tar -C /usr >> ./log/tar.log
-done
+    tar -vxzf $tar -C /usr >> ./log/tar.log
+done &
 
 for tar in /opt/soft/*.tgz
 do
     echo-log "unzip $tar..."
-    tar xvf $tar -C /usr >> ./log/tar.log
-done
+    tar -vxzf $tar -C /usr >> ./log/tar.log
+done &
+
+wait
 
 #移动软件目录
 mv /usr/jdk1.* /usr/java
@@ -76,5 +68,3 @@ mv /usr/spark-* /usr/spark
 
 mkdir /usr/zookeeper/zkdata
 mkdir /usr/zookeeper/zkdatalog
-
-for tar in /opt/soft/*.gz ;do tar -vxzf $tar -C /usr ; done

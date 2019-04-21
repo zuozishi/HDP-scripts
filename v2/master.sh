@@ -2,13 +2,19 @@
 
 function echo-log
 {
+    
     echo -e "\033[46;30m $1 \033[0m"
     echo "-------------"
 }
 
 #配置
-#开发模式
-IsDevelopment=1
+IP_MASTER="192.168.1.201"
+IP_SLAVE1="192.168.1.202"
+IP_SLAVE2="192.168.1.203"
+echo-log "IP_MASTER=$IP_MASTER"
+echo-log "IP_SLAVE1=$IP_SLAVE1"
+echo-log "IP_SLAVE2=$IP_SLAVE2"
+echo-log "Press any key to contiune."
 
 #建立日志文件夹
 if ( test -d ./log )
@@ -30,16 +36,6 @@ echo master > /etc/hostname
 
 #配置IP和Hosts
 echo-log "Build /etc/hosts"
-if [[ $IsDevelopment == 1 ]]
-then
-    IP_MASTER="192.168.1.201"
-    IP_SLAVE1="192.168.1.202"
-    IP_SLAVE2="192.168.1.203"
-else
-    IP_MASTER=$(whiptail --title "HDP-scripts" --inputbox "master ip" 10 60)
-    IP_SLAVE1=$(whiptail --title "HDP-scripts" --inputbox "slave1 ip" 10 60)
-    IP_SLAVE2=$(whiptail --title "HDP-scripts" --inputbox "slave2 ip" 10 60)
-fi
 echo-log "IP_MASTER=$IP_MASTER"
 echo-log "IP_SLAVE1=$IP_SLAVE1"
 echo-log "IP_SLAVE2=$IP_SLAVE2"
@@ -108,20 +104,15 @@ for tar in /opt/soft/*.tar.gz
 do
     echo-log "unzip $tar..."
     tar xvf $tar -C /usr >> ./log/tar.log
-done
+done &
 
 for tar in /opt/soft/*.tgz
 do
     echo-log "unzip $tar..."
     tar xvf $tar -C /usr >> ./log/tar.log
-done
+done &
 
-#获取软件目录
-#for JAVA_DIR in /usr/jdk*; do echo $JAVA_DIR; done
-#for ZOOKEEPERE_DIR in /usr/zookeeper*; do echo $ZOOKEEPERE_DIR; done
-#for HADOOP_DIR in /usr/hadoop*; do echo $HADOOP_DIR; done
-#for SCALA_DIR in /usr/scala*; do echo $SCALA_DIR; done
-#for SPARK_DIR in /usr/spark*; do echo $SPARK_DIR; done
+wait
 
 #移动软件目录
 mv /usr/jdk1.* /usr/java
@@ -136,8 +127,8 @@ hdpcfg=/usr/hadoop/etc/hadoop
 cp ./conf/core-site.xml $hdpcfg/core-site.xml
 cp ./conf/hdfs-site.xml $hdpcfg/hdfs-site.xml
 cp ./conf/yarn-site.xml $hdpcfg/yarn-site.xml
-cp ./conf/hadoop-env.sh $hdpcfg/hadoop-env.sh
-cp $hdpcfg/mapred-site.xml.template $hdpcfg/mapred-site.xml
+cp ./conf/mapred-site.xml $hdpcfg/mapred-site.xml
+echo "export JAVA_HOME=/usr/java" >> $hdpcfg/hadoop-env.sh
 echo "master" > $hdpcfg/master
 echo "slave1" > $hdpcfg/slaves
 echo "slave2" >> $hdpcfg/slaves
@@ -176,7 +167,7 @@ echo-log 'Configure file -> slave1'
 scp ./conf/core-site.xml slave1:$hdpcfg/core-site.xml
 scp ./conf/hdfs-site.xml slave1:$hdpcfg/hdfs-site.xml
 scp ./conf/yarn-site.xml slave1:$hdpcfg/yarn-site.xml
-scp ./conf/hadoop-env.sh slave1:$hdpcfg/hadoop-env.sh
+scp $hdpcfg/hadoop-env.sh slave1:$hdpcfg/hadoop-env.sh
 scp $hdpcfg/mapred-site.xml slave1:$hdpcfg/mapred-site.xml
 scp $hdpcfg/master slave1:$hdpcfg/master
 scp $hdpcfg/slaves slave1:$hdpcfg/slaves
@@ -189,36 +180,14 @@ echo-log 'Configure file -> slave2'
 scp ./conf/core-site.xml slave2:$hdpcfg/core-site.xml
 scp ./conf/hdfs-site.xml slave2:$hdpcfg/hdfs-site.xml
 scp ./conf/yarn-site.xml slave2:$hdpcfg/yarn-site.xml
-scp ./conf/hadoop-env.sh slave2:$hdpcfg/hadoop-env.sh
+scp $hdpcfg/hadoop-env.sh slave2:$hdpcfg/hadoop-env.sh
 scp $hdpcfg/mapred-site.xml slave2:$hdpcfg/mapred-site.xml
 scp $hdpcfg/master slave2:$hdpcfg/master
 scp $hdpcfg/slaves slave2:$hdpcfg/slaves
 scp /usr/spark/conf/spark-env.sh slave2:/usr/spark/conf/spark-env.sh
 scp /usr/spark/conf/slaves slave2:/usr/spark/conf/slaves
 scp $zoocfg slave2:$zoocfg
-scp /usr/zookeeper/zkdata/id2 slave2:/usr/zookeeper/zkdata/myid
-#rm -rf /usr/zookeeper/doc
-#rm -rf /usr/scala/doc
-#echo-log 'java -> slaves'
-#scp -r /usr/java slave1:/usr/java >> ./log/slave1_java.log &
-#scp -r /usr/java slave2:/usr/java >> ./log/slave2_java.log &
-#wait
-#echo-log 'zookeeper & scala -> slaves'
-#scp -r /usr/zookeeper slave1:/usr/zookeeper >> ./log/slave1_zookeeper.log &
-#scp -r /usr/zookeeper slave2:/usr/zookeeper >> ./log/slave2_zookeeper.log &
-#scp -r /usr/scala slave1:/usr/scala >> ./log/slave1_scala.log &
-#scp -r /usr/scala slave2:/usr/scala >> ./log/slave2_scala.log &
-#wait
-#echo-log 'hadoop -> slaves'
-#scp -r /usr/hadoop slave1:/usr/hadoop >> ./log/slave1_hadoop.log &
-#scp -r /usr/hadoop slave2:/usr/hadoop >> ./log/slave2_hadoop.log &
-#wait
-#echo-log 'spark -> slaves'
-#scp -r /usr/spark slave1:/usr/spark >> ./log/slave1_spark.log &
-#scp -r /usr/spark slave2:/usr/spark >> ./log/slave2_spark.log &
-#wait
-#scp /usr/zookeeper/zkdata/id2 slave1:/usr/zookeeper/zkdata/myid
-#scp /usr/zookeeper/zkdata/id3 slave2:/usr/zookeeper/zkdata/myid
+scp /usr/zookeeper/zkdata/id3 slave2:/usr/zookeeper/zkdata/myid
 
 echo-log 'Configure /etc/profile'
 echo -e "\n\
