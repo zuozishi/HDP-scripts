@@ -31,24 +31,20 @@ then
 fi
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa > ./log/ssh_key.log
 
-nowdate=$(date)
-if (whiptail --title "Change Time Zone ?" --yesno "$nowdate" 10 60) then
-    tzselect
-fi
-clear
-
 which ntpdate
 if [[ $? == 0 ]]
 then
-    echo-log 'Sync time from master...'
-    ntpdate master >> ./log/ntp.log &
+    echo 123 > /dev/null
+else
+    echo-log "Install NTP..."
+    yum install ntp -y > ./log/ntp-yum.log &
 fi
 
 #解压所有软件包
 for tar in /opt/soft/*.{gz,tgz}
 do
     echo-log "unzip $tar..."
-    (tar xvf $tar -C /usr; echo-log "unzip $tar complete") & >> ./log/tar.log
+    (tar xvf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
 done
 wait
 

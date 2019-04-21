@@ -11,6 +11,7 @@ echo "压缩脚本..."
 master_sh=$(base64 master.sh | sed ':t;N;s/\n//;b t')
 slave_sh=$(base64 slave.sh | sed ':t;N;s/\n//;b t')
 check_sh=$(base64 check.sh | sed ':t;N;s/\n//;b t')
+sshpass_bin=$(base64 sshpass | sed ':t;N;s/\n//;b t')
 
 #压缩配置文件
 echo "压缩配置文件..."
@@ -26,6 +27,7 @@ echo -e "#! /bin/bash\n\
 master_sh=\"${master_sh}\"\n\
 slave_sh=\"${slave_sh}\"\n\
 check_sh=\"${check_sh}\"\n\
+sshpass_bin=\"${sshpass_bin}\"\n\
 \n\
 conf_core=\"${conf_core}\"\n\
 conf_hdfs=\"${conf_hdfs}\"\n\
@@ -35,6 +37,8 @@ conf_yarn=\"${conf_yarn}\"\n\
 echo \$master_sh | base64 -d > master.sh\n\
 echo \$slave_sh | base64 -d > slave.sh\n\
 echo \$check_sh | base64 -d > check.sh\n\
+echo \$sshpass_bin | base64 -d > sshpass\n\
+chmod 777 sshpass\n\
 \n\
 mkdir ./conf\n\
 echo \$conf_core | base64 -d > ./conf/core-site.xml\n\

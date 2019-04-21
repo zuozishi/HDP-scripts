@@ -11,9 +11,16 @@ function echo-log
 IP_MASTER="192.168.1.201"
 IP_SLAVE1="192.168.1.202"
 IP_SLAVE2="192.168.1.203"
+
+SSHKEY_SLAVE1="123123"
+SSHKEY_SLAVE2="123123"
+
 echo-log "IP_MASTER=$IP_MASTER"
 echo-log "IP_SLAVE1=$IP_SLAVE1"
 echo-log "IP_SLAVE2=$IP_SLAVE2"
+
+echo-log "SSHKEY_SLAVE1=$SSHKEY_SLAVE1"
+echo-log "SSHKEY_SLAVE2=$SSHKEY_SLAVE2"
 echo-log "Press any key to contiune."
 read
 
@@ -23,6 +30,13 @@ then
     ls ./log
 else
     mkdir ./log
+fi
+
+./sshpass | grep password > /dev/null
+if [ $? -eq 0 ]; then
+    echo-log "sshpass Enable"
+else
+    echo-log "sshpass Disable"
 fi
 
 #关闭防火墙
@@ -46,26 +60,14 @@ echo "$IP_MASTER master" >> /etc/hosts
 echo "$IP_SLAVE1 slave1" >> /etc/hosts
 echo "$IP_SLAVE2 slave2" >> /etc/hosts
 
-#发布Hosts
-echo-log "Send /etc/hosts"
-scp /etc/hosts slave1:/etc/hosts
-scp /etc/hosts slave2:/etc/hosts
-
 #时间同步
-nowdate=$(date)
-if (whiptail --title "Change Time Zone ?" --yesno "$nowdate" 10 60) then
-    tzselect
-fi
-clear
 which ntpdate
 if [[ $? == 0 ]]
 then
     echo-log 'NTP has installed'
 else
-    if (whiptail --title "yum install ntp ?" --yesno "" 10 60) then
-        echo-log 'Install NTP...'
-        yum install ntp -y >> ./log/ntp.log
-    fi
+    echo-log 'Install NTP...'
+    yum install ntp -y >> ./log/ntp.log
 fi
 which ntpdate
 if [[ $? == 0 ]]
@@ -79,11 +81,20 @@ fi
 #配置Slaves
 chmod 777 *.sh
 echo-log "Configure slave1"
-scp slave.sh slave1:~/slave.sh
-ssh slave1 "./slave.sh slave1"
-echo-log "Configure slave2"
-scp slave.sh slave2:~/slave.sh
-ssh slave2 "./slave.sh slave2"
+./sshpass | grep password > /dev/null
+if [ $? -eq 0 ]; then
+    ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave.sh slave1:~/slave.sh
+    ./sshpass -p "$SSHKEY_SLAVE1" ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1"
+    echo-log "Configure slave2"
+    ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave.sh slave2:~/slave.sh
+    ./sshpass -p "$SSHKEY_SLAVE2" ssh -o StrictHostKeyChecking=no slave2 "./slave.sh slave2"
+else
+    scp slave.sh slave1:~/slave.sh
+    ssh slave1 "./slave.sh slave1"
+    echo-log "Configure slave2"
+    scp slave.sh slave2:~/slave.sh
+    ssh slave2 "./slave.sh slave2"
+fi
 
 #SSH免密登录
 echo-log "SSH public key"
@@ -92,19 +103,30 @@ then
     rm -f ~/.ssh/id_rsa
 fi
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa > ./log/ssh_key.log
-scp slave1:~/.ssh/id_rsa.pub ~/.ssh/slave1
-scp slave2:~/.ssh/id_rsa.pub ~/.ssh/slave2
+./sshpass | grep password > /dev/null
+if [ $? -eq 0 ]; then
+    ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave1:~/.ssh/id_rsa.pub ~/.ssh/slave1
+    ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave2:~/.ssh/id_rsa.pub ~/.ssh/slave2
+else
+    scp slave1:~/.ssh/id_rsa.pub ~/.ssh/slave1
+    scp slave2:~/.ssh/id_rsa.pub ~/.ssh/slave2
+fi
 cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
 cat ~/.ssh/slave1 >> ~/.ssh/authorized_keys
 cat ~/.ssh/slave2 >> ~/.ssh/authorized_keys
-scp ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
-scp ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
+if [ $? -eq 0 ]; then
+    ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
+    ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
+else
+    scp ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
+    scp ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
+fi
 
 #解压所有软件包
 for tar in /opt/soft/*.{gz,tgz}
 do
     echo-log "unzip $tar..."
-    (tar xvf $tar -C /usr; echo-log "unzip $tar complete") & >> ./log/tar.log
+    (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
 done
 wait
 
@@ -156,6 +178,11 @@ echo "export HADOOP_CONF_DIR=/usr/hadoop/etc/hadoop" >> /usr/spark/conf/spark-en
 echo "slave1" > /usr/spark/conf/slaves
 echo "slave2" >> /usr/spark/conf/slaves
 
+#发布Hosts
+echo-log "Send /etc/hosts"
+scp /etc/hosts slave1:/etc/hosts
+scp /etc/hosts slave2:/etc/hosts
+
 #发布配置文件
 echo-log 'Configure file -> slave1'
 scp ./conf/core-site.xml slave1:$hdpcfg/core-site.xml
@@ -194,3 +221,38 @@ export PATH=\$PATH:\$JAVA_HOME/bin:\$ZOOKEEPER_HOME/bin:\$HADOOP_HOME/bin:\$HADO
 source /etc/profile
 scp /etc/profile slave1:/etc/profile
 scp /etc/profile slave2:/etc/profile
+
+# Known Hosts
+echo-log "Build known_hosts"
+ssh -o StrictHostKeyChecking=no master hostname > /dev/null
+ssh -o StrictHostKeyChecking=no slave1 "ssh -o StrictHostKeyChecking=no master hostname" > /dev/null
+ssh -o StrictHostKeyChecking=no slave1 "ssh -o StrictHostKeyChecking=no slave1 hostname" > /dev/null
+ssh -o StrictHostKeyChecking=no slave1 "ssh -o StrictHostKeyChecking=no slave2 hostname" > /dev/null
+ssh -o StrictHostKeyChecking=no slave2 "ssh -o StrictHostKeyChecking=no master hostname" > /dev/null
+ssh -o StrictHostKeyChecking=no slave2 "ssh -o StrictHostKeyChecking=no slave1 hostname" > /dev/null
+ssh -o StrictHostKeyChecking=no slave2 "ssh -o StrictHostKeyChecking=no slave2 hostname" > /dev/null
+
+#Sync Time
+echo-log "Sync Time"
+ssh slave1 "ntpdate master"
+ssh slave2 "ntpdate master"
+
+#Start Service
+source /etc/profile
+echo-log "Start Zookeeper -> master"
+zkServer.sh start
+echo-log "Start Zookeeper -> Slave1"
+ssh -o StrictHostKeyChecking=no slave1 "source /etc/profile ; zkServer.sh start"
+echo-log "Start Zookeeper -> Slave2"
+ssh -o StrictHostKeyChecking=no slave2 "source /etc/profile ; zkServer.sh start"
+echo-log "Format HDFS"
+hadoop namenode -Format > /dev/null
+echo-log "Start HDFS"
+start-dfs.sh > /dev/null
+echo-log "Start YARN"
+start-yarn.sh > /dev/null
+echo-log "Start SPARK"
+$SPARK_HOME/sbin/start-all.sh > /dev/null
+
+#Check
+./check.sh
