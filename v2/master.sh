@@ -15,6 +15,7 @@ echo-log "IP_MASTER=$IP_MASTER"
 echo-log "IP_SLAVE1=$IP_SLAVE1"
 echo-log "IP_SLAVE2=$IP_SLAVE2"
 echo-log "Press any key to contiune."
+read
 
 #建立日志文件夹
 if ( test -d ./log )
