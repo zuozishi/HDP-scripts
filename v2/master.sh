@@ -234,8 +234,9 @@ ssh -o StrictHostKeyChecking=no slave2 "ssh -o StrictHostKeyChecking=no slave2 h
 
 #Sync Time
 echo-log "Sync Time"
-ssh slave1 "ntpdate master"
-ssh slave2 "ntpdate master"
+ssh slave1 "ntpdate master" &
+ssh slave2 "ntpdate master" &
+wait
 
 #Start Service
 source /etc/profile
