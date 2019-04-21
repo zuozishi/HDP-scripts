@@ -46,7 +46,7 @@ echo \$conf_hdfs | base64 -d > ./conf/hdfs-site.xml\n\
 echo \$conf_mapred | base64 -d > ./conf/mapred-site.xml\n\
 echo \$conf_yarn | base64 -d > ./conf/yarn-site.xml\n\
 chmod 777 *.sh\n\
-./master.sh" > setup.sh
+echo 'Decode Complete'" > setup.sh
 
 chmod 777 setup.sh
 

@@ -8,6 +8,7 @@ function echo-log
 }
 
 #配置
+
 IP_MASTER="192.168.1.201"
 IP_SLAVE1="192.168.1.202"
 IP_SLAVE2="192.168.1.203"
@@ -24,6 +25,7 @@ echo-log "SSHKEY_SLAVE2=$SSHKEY_SLAVE2"
 echo-log "Press any key to contiune."
 read
 
+starttime=`date +'%Y-%m-%d %H:%M:%S'`
 #建立日志文件夹
 if ( test -d ./log )
 then
@@ -257,3 +259,8 @@ $SPARK_HOME/sbin/start-all.sh > /dev/null
 
 #Check
 ./check.sh
+
+endtime=`date +'%Y-%m-%d %H:%M:%S'`
+start_seconds=$(date --date="$starttime" +%s);
+end_seconds=$(date --date="$endtime" +%s);
+echo "Run time: "$((end_seconds-start_seconds))"s"
