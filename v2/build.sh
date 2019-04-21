@@ -49,9 +49,10 @@ chmod 777 *.sh\n\
 echo 'Decode Complete'" > setup.sh
 
 chmod 777 setup.sh
-
-gzip setup.sh
-base64 setup.sh.gz > setup.sh.gz.b64
+cp setup.sh setup.sh.1
+gzip setup.sh.1
+mv setup.sh.1.gz setup.sh.gz
+(base64 setup.sh.gz | sed ':t;N;s/\n//;b t') > setup.b64
 
 size=$(ls -l setup.sh.gz | awk '{ print $5 }')
 let size=$size/1000

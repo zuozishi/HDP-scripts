@@ -34,9 +34,15 @@ else
     mkdir ./log
 fi
 
-./sshpass | grep password > /dev/null
+test -e ./sshpass
 if [ $? -eq 0 ]; then
-    echo-log "sshpass Enable"
+    ./sshpass | grep password > /dev/null
+    if [ $? -eq 0 ]; then
+        echo-log "sshpass Enable"
+    else
+        rm -f ./sshpass
+        echo-log "sshpass Disable"
+    fi
 else
     echo-log "sshpass Disable"
 fi
@@ -87,10 +93,17 @@ do
     (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
 done
 
+test -e ./sshpass
+if [ $? -eq 0 ]; then
+    echo 123 > /dev/null
+else
+    wait
+fi
+
 #配置Slaves
 chmod 777 *.sh
 echo-log "Configure slave1"
-./sshpass | grep password > /dev/null
+test -e ./sshpass
 if [ $? -eq 0 ]; then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave.sh slave1:~/slave.sh
     ./sshpass -p "$SSHKEY_SLAVE1" ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1" &
@@ -98,11 +111,11 @@ if [ $? -eq 0 ]; then
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave.sh slave2:~/slave.sh
     ./sshpass -p "$SSHKEY_SLAVE2" ssh -o StrictHostKeyChecking=no slave2 "./slave.sh slave2" &
 else
-    scp slave.sh slave1:~/slave.sh
-    ssh slave1 "./slave.sh slave1"
+    scp -o StrictHostKeyChecking=no slave.sh slave1:~/slave.sh
+    ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1"
     echo-log "Configure slave2"
-    scp slave.sh slave2:~/slave.sh
-    ssh slave2 "./slave.sh slave2"
+    scp -o StrictHostKeyChecking=no slave.sh slave2:~/slave.sh
+    ssh -o StrictHostKeyChecking=no slave2 "./slave.sh slave2"
 fi
 wait
 
@@ -113,8 +126,9 @@ then
     rm -f ~/.ssh/id_rsa
 fi
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa > ./log/ssh_key.log
-./sshpass | grep password > /dev/null
-if [ $? -eq 0 ]; then
+test -e ./sshpass
+if [ $? -eq 0 ]
+then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave1:~/.ssh/id_rsa.pub ~/.ssh/slave1
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave2:~/.ssh/id_rsa.pub ~/.ssh/slave2
 else
@@ -124,6 +138,8 @@ fi
 cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
 cat ~/.ssh/slave1 >> ~/.ssh/authorized_keys
 cat ~/.ssh/slave2 >> ~/.ssh/authorized_keys
+
+test -e ./sshpass
 if [ $? -eq 0 ]; then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
