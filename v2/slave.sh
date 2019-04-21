@@ -2,7 +2,7 @@
 
 function echo-log
 {
-    echo -e "\033[47;34m $1 \033[0m"
+    echo -e "\033[47;34m $HOST_NAME: $1 \033[0m"
     echo "-------------"
 }
 

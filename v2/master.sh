@@ -80,16 +80,23 @@ then
     systemctl restart ntpd.service
 fi
 
+#解压所有软件包
+for tar in /opt/soft/*.{gz,tgz}
+do
+    echo-log "unzip $tar..."
+    (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
+done
+
 #配置Slaves
 chmod 777 *.sh
 echo-log "Configure slave1"
 ./sshpass | grep password > /dev/null
 if [ $? -eq 0 ]; then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave.sh slave1:~/slave.sh
-    ./sshpass -p "$SSHKEY_SLAVE1" ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1"
+    ./sshpass -p "$SSHKEY_SLAVE1" ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1" &
     echo-log "Configure slave2"
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave.sh slave2:~/slave.sh
-    ./sshpass -p "$SSHKEY_SLAVE2" ssh -o StrictHostKeyChecking=no slave2 "./slave.sh slave2"
+    ./sshpass -p "$SSHKEY_SLAVE2" ssh -o StrictHostKeyChecking=no slave2 "./slave.sh slave2" &
 else
     scp slave.sh slave1:~/slave.sh
     ssh slave1 "./slave.sh slave1"
@@ -97,6 +104,7 @@ else
     scp slave.sh slave2:~/slave.sh
     ssh slave2 "./slave.sh slave2"
 fi
+wait
 
 #SSH免密登录
 echo-log "SSH public key"
@@ -123,14 +131,6 @@ else
     scp ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
     scp ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
 fi
-
-#解压所有软件包
-for tar in /opt/soft/*.{gz,tgz}
-do
-    echo-log "unzip $tar..."
-    (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
-done
-wait
 
 #移动软件目录
 mv /usr/jdk1.* /usr/java
