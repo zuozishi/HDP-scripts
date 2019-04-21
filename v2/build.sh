@@ -50,4 +50,7 @@ echo 'Decode Complete'" > setup.sh
 
 chmod 777 setup.sh
 
-echo "打包完成"
+gzip setup.sh
+size=$(ls -l setup.sh.gz | awk '{ print $5 }')
+let size=$size/1000
+echo "打包完成，大小：${size} KB"
