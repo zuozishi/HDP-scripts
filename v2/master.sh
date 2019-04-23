@@ -8,7 +8,6 @@ function echo-log
 }
 
 #配置
-
 IP_MASTER="192.168.1.201"
 IP_SLAVE1="192.168.1.202"
 IP_SLAVE2="192.168.1.203"
@@ -16,12 +15,12 @@ IP_SLAVE2="192.168.1.203"
 SSHKEY_SLAVE1="123123"
 SSHKEY_SLAVE2="123123"
 
-echo-log "IP_MASTER=$IP_MASTER"
-echo-log "IP_SLAVE1=$IP_SLAVE1"
-echo-log "IP_SLAVE2=$IP_SLAVE2"
+echo-log "IP_MASTER=\"$IP_MASTER\""
+echo-log "IP_SLAVE1=\"$IP_SLAVE1\""
+echo-log "IP_SLAVE2=\"$IP_SLAVE2\""
 
-echo-log "SSHKEY_SLAVE1=$SSHKEY_SLAVE1"
-echo-log "SSHKEY_SLAVE2=$SSHKEY_SLAVE2"
+echo-log "SSHKEY_SLAVE1=\"$SSHKEY_SLAVE1\""
+echo-log "SSHKEY_SLAVE2=\"$SSHKEY_SLAVE2\""
 echo-log "Press any key to contiune."
 read
 
@@ -69,16 +68,15 @@ echo "$IP_SLAVE1 slave1" >> /etc/hosts
 echo "$IP_SLAVE2 slave2" >> /etc/hosts
 
 #时间同步
-which ntpdate
-if [[ $? == 0 ]]
+if ( which ntpdate )
 then
     echo-log 'NTP has installed'
 else
     echo-log 'Install NTP...'
     yum install ntp -y >> ./log/ntp.log
 fi
-which ntpdate
-if [[ $? == 0 ]]
+
+if ( which ntpdate )
 then
     echo "disable monitor" > /etc/ntp.conf
     echo "server 127.127.1.0" >> /etc/ntp.conf
@@ -93,8 +91,7 @@ do
     (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
 done
 
-test -e ./sshpass
-if [ $? -eq 0 ]; then
+if ( test -e ./sshpass ); then
     echo 123 > /dev/null
 else
     wait
@@ -103,8 +100,7 @@ fi
 #配置Slaves
 chmod 777 *.sh
 echo-log "Configure slave1"
-test -e ./sshpass
-if [ $? -eq 0 ]; then
+if ( test -e ./sshpass ); then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave.sh slave1:~/slave.sh
     ./sshpass -p "$SSHKEY_SLAVE1" ssh -o StrictHostKeyChecking=no slave1 "./slave.sh slave1" &
     echo-log "Configure slave2"
@@ -126,8 +122,7 @@ then
     rm -f ~/.ssh/id_rsa
 fi
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa > ./log/ssh_key.log
-test -e ./sshpass
-if [ $? -eq 0 ]
+if ( test -e ./sshpass )
 then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no slave1:~/.ssh/id_rsa.pub ~/.ssh/slave1
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no slave2:~/.ssh/id_rsa.pub ~/.ssh/slave2
@@ -139,8 +134,7 @@ cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
 cat ~/.ssh/slave1 >> ~/.ssh/authorized_keys
 cat ~/.ssh/slave2 >> ~/.ssh/authorized_keys
 
-test -e ./sshpass
-if [ $? -eq 0 ]; then
+if ( test -e ./sshpass ); then
     ./sshpass -p "$SSHKEY_SLAVE1" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave1:~/.ssh/authorized_keys
     ./sshpass -p "$SSHKEY_SLAVE2" scp -o StrictHostKeyChecking=no ~/.ssh/authorized_keys slave2:~/.ssh/authorized_keys
 else

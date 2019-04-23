@@ -106,12 +106,10 @@ check-common
 if ([ $(hostname) == "master" ])
 then
     check-master
-    if (whiptail --title "Check Salves ?" --yesno "Check Salves ?" 10 60) then
-        scp ./check.sh slave1:~/check.sh
-        ssh slave1 "./check.sh"
-        scp ./check.sh slave2:~/check.sh
-        ssh slave2 "./check.sh"
-    fi
+    scp ./check.sh slave1:~/check.sh
+    ssh slave1 "./check.sh"
+    scp ./check.sh slave2:~/check.sh
+    ssh slave2 "./check.sh"
 else
     check-slave
 fi

@@ -6,6 +6,11 @@ echo "|       All in one       |"
 echo "|                        |"
 echo "--------------------------"
 
+if ( test -d ./build ) ;then
+    rm -rf ./build
+fi
+mkdir ./build
+
 #压缩脚本
 echo "压缩脚本..."
 master_sh=$(base64 master.sh | sed ':t;N;s/\n//;b t')
@@ -46,14 +51,21 @@ echo \$conf_hdfs | base64 -d > ./conf/hdfs-site.xml\n\
 echo \$conf_mapred | base64 -d > ./conf/mapred-site.xml\n\
 echo \$conf_yarn | base64 -d > ./conf/yarn-site.xml\n\
 chmod 777 *.sh\n\
-echo 'Decode Complete'" > setup.sh
+echo 'Decode Complete'" > ./build/setup.sh
 
-chmod 777 setup.sh
-cp setup.sh setup.sh.1
-gzip setup.sh.1
-mv setup.sh.1.gz setup.sh.gz
-(base64 setup.sh.gz | sed ':t;N;s/\n//;b t') > setup.b64
+chmod 777 ./build/setup.sh
+cp ./build/setup.sh ./build/setup.sh.1
+gzip ./build/setup.sh.1
+mv ./build/setup.sh.1.gz ./build/setup.sh.gz
+(base64 ./build/setup.sh.gz | sed ':t;N;s/\n//;b t') > ./build/setup.b64
 
-size=$(ls -l setup.sh.gz | awk '{ print $5 }')
+echo "打包完成："
+size=$(ls -l ./build/setup.sh | awk '{ print $5 }')
 let size=$size/1000
-echo "打包完成，大小：${size} KB"
+echo "setup.sh $size KB"
+size=$(ls -l ./build/setup.sh.gz | awk '{ print $5 }')
+let size=$size/1000
+echo "setup.sh.gz $size KB"
+size=$(ls -l ./build/setup.b64 | awk '{ print $5 }')
+let size=$size/1000
+echo "setup.b64 $size KB"
