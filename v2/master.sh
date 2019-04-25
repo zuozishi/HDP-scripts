@@ -2,7 +2,6 @@
 
 function echo-log
 {
-    
     echo -e "\033[46;30m $1 \033[0m"
     echo "-------------"
 }
@@ -21,8 +20,8 @@ echo-log "IP_SLAVE2=\"$IP_SLAVE2\""
 
 echo-log "SSHKEY_SLAVE1=\"$SSHKEY_SLAVE1\""
 echo-log "SSHKEY_SLAVE2=\"$SSHKEY_SLAVE2\""
-echo-log "Press any key to contiune."
-read
+read -p "Press any key to contiune..."
+echo "-------------"
 
 starttime=`date +'%Y-%m-%d %H:%M:%S'`
 #建立日志文件夹
@@ -58,22 +57,43 @@ echo master > /etc/hostname
 
 #配置IP和Hosts
 echo-log "Build /etc/hosts"
-echo-log "IP_MASTER=$IP_MASTER"
-echo-log "IP_SLAVE1=$IP_SLAVE1"
-echo-log "IP_SLAVE2=$IP_SLAVE2"
 echo "127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4" > /etc/hosts
 echo "::1 localhost localhost.localdomain localhost6 localhost6.localdomain6" >> /etc/hosts
 echo "$IP_MASTER master" >> /etc/hosts
 echo "$IP_SLAVE1 slave1" >> /etc/hosts
 echo "$IP_SLAVE2 slave2" >> /etc/hosts
 
-#时间同步
-if ( which ntpdate )
+
+#网络检查
+service network start
+ping -c 3 -W 5 114.114.114.114 | grep "0 received"
+if [ $? -eq 0 ]
 then
-    echo-log 'NTP has installed'
+    echo -e "\033[41;30m Network Disable \033[0m"
+    NETWORK_ENABLE=0
+    DNS_ENABLE=0
 else
-    echo-log 'Install NTP...'
-    yum install ntp -y >> ./log/ntp.log
+    echo-log "Network Enable"
+    NETWORK_ENABLE=1
+    echo "nameserver 114.114.114.114" > /etc/resolv.conf
+    echo "nameserver 114.114.115.115" >> /etc/resolv.conf
+    ping -c 3 -W 5 baidu.com | grep "0 received"
+    if [ $? -eq 0 ]
+    then
+        echo -e "\033[41;30m DNS Disable \033[0m"
+        echo "-------------"
+        DNS_ENABLE=0
+    else
+        echo-log "DNS Enable"
+        DNS_ENABLE=1
+    fi
+fi
+read
+#时间同步
+if [ $DNS_ENABLE -eq 1 ]
+then
+    if ( which ntpdate );then echo-log 'NTP has installed';else echo-log 'Install NTP...';yum install ntp -y >> ./log/ntp.log;fi
+    ntpdate ntp1.aliyun.com
 fi
 
 if ( which ntpdate )
@@ -91,6 +111,7 @@ do
     (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
 done
 
+chmod 777 sshpass
 if ( test -e ./sshpass ); then
     echo 123 > /dev/null
 else

@@ -37,6 +37,9 @@ then
     echo 123 > /dev/null
 else
     echo-log "Install NTP..."
+    mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+    curl http://mirrors.aliyun.com/repo/Centos-7.repo > /etc/yum.repos.d/CentOS-Base.repo
+    yum makecache
     yum install ntp -y > ./log/ntp-yum.log &
 fi
 
