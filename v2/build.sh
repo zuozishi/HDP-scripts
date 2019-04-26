@@ -11,6 +11,7 @@ if ( test -d ./build ) ;then
 fi
 mkdir ./build
 
+
 #压缩脚本
 echo "压缩脚本..."
 master_sh=$(base64 master.sh | sed ':t;N;s/\n//;b t')

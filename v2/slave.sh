@@ -6,6 +6,8 @@ function echo-log
     echo "-------------"
 }
 
+#配置
+NETWORK_ENABLE=1
 #建立日志文件夹
 if ( test -d ./log )
 then
@@ -34,20 +36,17 @@ ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa > ./log/ssh_key.log
 which ntpdate
 if [[ $? == 0 ]]
 then
-    echo 123 > /dev/null
+    ntpdate master
 else
-    echo-log "Install NTP..."
-    mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
-    curl http://mirrors.aliyun.com/repo/Centos-7.repo > /etc/yum.repos.d/CentOS-Base.repo
-    yum makecache
-    yum install ntp -y > ./log/ntp-yum.log &
+    if [[ $NETWORK_ENABLE == 1 ]];then
+        yum install ntp -y > ./log/ntp-yum.log &
+    fi
 fi
 
 #解压所有软件包
 for tar in /opt/soft/*.{gz,tgz}
 do
-    echo-log "unzip $tar..."
-    (tar xvf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
+    (tar xvf $tar -C /usr >> ./log/tar.log; echo-log "$tar done") &
 done
 wait
 

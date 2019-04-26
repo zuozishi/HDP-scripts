@@ -7,13 +7,14 @@ function echo-log
 }
 
 #配置
+NETWORK_ENABLE=1
 IP_MASTER="192.168.1.201"
 IP_SLAVE1="192.168.1.202"
 IP_SLAVE2="192.168.1.203"
-
 SSHKEY_SLAVE1="123123"
 SSHKEY_SLAVE2="123123"
 
+echo-log "NETWORK_ENABLE=$NETWORK_ENABLE"
 echo-log "IP_MASTER=\"$IP_MASTER\""
 echo-log "IP_SLAVE1=\"$IP_SLAVE1\""
 echo-log "IP_SLAVE2=\"$IP_SLAVE2\""
@@ -63,34 +64,8 @@ echo "$IP_MASTER master" >> /etc/hosts
 echo "$IP_SLAVE1 slave1" >> /etc/hosts
 echo "$IP_SLAVE2 slave2" >> /etc/hosts
 
-
-#网络检查
-service network start
-ping -c 3 -W 5 114.114.114.114 | grep "0 received"
-if [ $? -eq 0 ]
-then
-    echo -e "\033[41;30m Network Disable \033[0m"
-    NETWORK_ENABLE=0
-    DNS_ENABLE=0
-else
-    echo-log "Network Enable"
-    NETWORK_ENABLE=1
-    echo "nameserver 114.114.114.114" > /etc/resolv.conf
-    echo "nameserver 114.114.115.115" >> /etc/resolv.conf
-    ping -c 3 -W 5 baidu.com | grep "0 received"
-    if [ $? -eq 0 ]
-    then
-        echo -e "\033[41;30m DNS Disable \033[0m"
-        echo "-------------"
-        DNS_ENABLE=0
-    else
-        echo-log "DNS Enable"
-        DNS_ENABLE=1
-    fi
-fi
-read
 #时间同步
-if [ $DNS_ENABLE -eq 1 ]
+if [ $NETWORK_ENABLE -eq 1 ]
 then
     if ( which ntpdate );then echo-log 'NTP has installed';else echo-log 'Install NTP...';yum install ntp -y >> ./log/ntp.log;fi
     ntpdate ntp1.aliyun.com
@@ -107,8 +82,7 @@ fi
 #解压所有软件包
 for tar in /opt/soft/*.{gz,tgz}
 do
-    echo-log "unzip $tar..."
-    (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "unzip $tar complete") &
+    (tar zxf $tar -C /usr >> ./log/tar.log; echo-log "$tar done") &
 done
 
 chmod 777 sshpass
