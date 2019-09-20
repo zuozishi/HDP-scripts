@@ -90,6 +90,10 @@ systemctl start mysqld
 cat /var/log/mysqld.log | grep password
 mysql_secure_installation
 mysql -u root -p
-grant all privileges on *.* to 'root'@'%' identified by '123123' with grant option;
+set global validate_password_policy=0;
+set global validate_password_length=4;
+use mysql;
+update user set Host='%' where User='root';
+alter user 'root'@'%' identified by '123123';
 flush privileges;
 ```
