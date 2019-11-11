@@ -1,3 +1,3 @@
-v1/pkgs/*.gz
-v1/pkgs/*.tgz
+pkgs/*
+pkgs/mysql-8.0.18-1.el7.x86_64.rpm-bundle/*
 .vscode/*
