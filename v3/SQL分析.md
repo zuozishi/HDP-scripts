@@ -38,6 +38,25 @@ create table person(
     native_country string,
     high_income string
 ) row format delimited fields terminated by ',';
+load data local inpath '/root/dataset2.txt' into table person;
+```
+
+### 分析
+1、年薪超过50K的占找整体比例  
+```
+SELECT (count1/total)
+FROM
+(select count(*) as total from person) a
+JOIN
+(select count(*) as count1 from person where high_income='>50K') b;
+```
+2、学历为本科Bachelors的人员在调查中的占比  
+```
+SELECT (count1/total)
+FROM
+(select count(*) as total from person) a
+JOIN
+(select count(*) as count1 from person where education='Bachelors') b;
 ```
 
 ## 单车租赁分析
@@ -75,10 +94,6 @@ load data local inpath '/root/dataset1.txt' into table bike;
 2、计算单车平均用时(分)  
 `select round(avg(duration)/60000) from bike;`  
 3、计算会员与非会员用户的占比  
- #计算总数(42405)  
-`select count(*) from bike;`  
-#计算占比  
-`select count(*),type,concat(round(count(*)/42405*100,2),'%') from bike group by type;` 
 ```
 SELECT type,typenum,concat(round(typenum/total*100,2),'%')
 FROM
